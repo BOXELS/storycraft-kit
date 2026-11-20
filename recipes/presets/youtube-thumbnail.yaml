@@ -1,0 +1,7 @@
+# Look of the YouTube thumbnail. Change these instead of the recipe.
+# title_box: [x, y, width, height] of the paragraph box on the 1280x720 canvas (lower third).
+title_box: "[60, 440, 1160, 240]"
+font: "Helvetica Neue"
+font_size: 120
+stroke_size: 8
+jpeg_quality: 88

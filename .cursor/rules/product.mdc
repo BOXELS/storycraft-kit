@@ -1,0 +1,45 @@
+---
+description: Product context for STORYCRAFT — what it is, who it's for, and where it's going. Applies to every interaction.
+globs:
+alwaysApply: true
+---
+
+# Product Rules
+
+## What this is
+
+STORYCRAFT gives AI agents and people one-command control of the ArtCraft Crafting Apps (PhotoCraft, VectorCraft and FilmCraft first; LightCraft, PdfCraft, EffectCraft and the rest later). Think "Shortcuts/Automator for the Craft suite, drivable by agents." It adds a Mac doctor/setup tool (`sc`), a recipe runner that chains apps with verified outputs, a workflow MCP server (`storycraft-mcp`), and a bug loop back to the apps' GitHub repos. It is a personal/team tool, not a commercial product. It builds on the apps' own CLIs and the launcher's `craft-ai-mcp` gateway — it does not replace them.
+
+## Who uses this
+
+Primary user: the owner, on a Mac, asking an agent in Cursor or Claude to "make a thumbnail from this photo" or "make the full icon set for MyApp." They want finished files in a folder, not a tour of command IDs.
+
+Secondary user: AI agents (Cursor, Claude Code) calling `sc` or `storycraft-mcp` tools, and the Craft app maintainers who receive our bug reports.
+
+## Key user flows
+
+1. Image → `youtube-thumbnail` recipe → 1280×720 JPEG ≤ 2 MB + editable PSD + legibility preview.
+2. App name (or master SVG) → `icon-set` recipe → macOS/iOS/Android/Windows/web/Linux icons + contact sheet.
+3. Step fails → `sc bug draft` → scrubbed, de-duplicated issue draft → owner approves → filed on the right `storytold/*` repo (or commented on the existing issue).
+4. New Mac → `sc doctor --fix` → launcher, `AI-MCP` flag, app CLIs and both MCP entries confirmed.
+
+Every new feature should connect to one of these flows. If it doesn't, question whether we need it.
+
+## Roadmap
+
+Priority apps: PhotoCraft, VectorCraft, FilmCraft (no FigCraft fallbacks for now). Phase 1 (scaffold) ships `sc doctor`/`sc flags`, the recipe engine, `youtube-thumbnail` (PhotoCraft), `icon-set` (VectorCraft + packer), the `storycraft-mcp` skeleton and bug drafts. Next: live verification on the Mac, per-app command-ID maps in `apps/`, a FilmCraft recipe, then a Finder Quick Action and later an optional desktop app. Keep recipes declarative and app-version-pinned so new apps and recipes don't need engine changes.
+
+## Tone of voice
+
+Plain and specific. "Exported 3 thumbnails to ~/StoryCraft/jobs/2026-11-20-a/ (largest 1.4 MB)" not "Done!". Errors name the step, the app and the next action: "PhotoCraft 0.23.1 has no command `type.addLayer`; run `sc commands photocraft --search type`" not "Recipe failed."
+
+## Competitors and positioning
+
+We're not a fork of the Craft apps, and not AutoCraft (that's the maintainers' triage pipeline). We're closer to a power user's automation kit on top of the official CLIs. Never suggest patterns that bypass the apps' own consent switch (`apps.json`), their automation roots, or upstream contribution rules.
+
+## Legal and compliance
+
+- The Craft apps are MIT/Apache-2.0; the ArtCraft name and logos are trademarks — don't use them in our branding or generated icons.
+- Generated icons/thumbnails must not copy third-party logos or trademarked marks unless the owner supplies them.
+- AI generation (if enabled) uses the owner's own provider accounts; ask before any paid call.
+- Public GitHub text follows the privacy scrub in `upstream-contrib.mdc`.

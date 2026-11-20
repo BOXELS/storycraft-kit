@@ -1,0 +1,107 @@
+# Image + title -> YouTube thumbnail, made in PhotoCraft.
+# Docs: docs/recipes/youtube-thumbnail.md. Command parameters marked "verify on Mac" in that doc
+# come from PhotoCraft's source and still need one live run against a released build.
+id: youtube-thumbnail
+version: 1
+summary: Photo + title -> 1280x720 YouTube thumbnail (JPEG under 2 MB, layered PSD, small-size previews) via PhotoCraft.
+
+requires:
+  photocraft:
+    min_version: "0.23.0"
+    commands:
+      - image.imageSize
+      - image.crop
+      - type.create
+      - layer.layerStyle.stroke
+      - layer.layerStyle.dropShadow
+
+inputs:
+  image:
+    type: file
+    required: true
+    extensions: [png, jpg, jpeg]
+    help: the background photo (PNG or JPEG; it is scaled and cropped to fill 16:9)
+  title:
+    type: text
+    required: true
+    help: 2-5 words read best at phone size
+  text_color:
+    type: color
+    default: "#FFFFFF"
+  outline_color:
+    type: color
+    default: "#000000"
+
+preset: presets/youtube-thumbnail.yaml
+
+steps:
+  - id: fit
+    note: scale-and-crop numbers so the photo covers 1280x720 with no bars
+    builtin:
+      use: cover-fit
+      image: "{{inputs.image}}"
+      width: 1280
+      height: 720
+
+  - id: compose
+    note: resize, crop, set the title, outline and shadow it; save the layered PSD
+    cli:
+      app: photocraft
+      args:
+        - run
+        - "{{inputs.image}}"
+        - --cmd
+        - image.imageSize
+        - --params
+        - '{"width": {{steps.fit.width}}, "height": {{steps.fit.height}}, "resample": "bicubic"}'
+        - --cmd
+        - image.crop
+        - --params
+        - '{"x": {{steps.fit.x}}, "y": {{steps.fit.y}}, "width": 1280, "height": 720}'
+        - --cmd
+        - type.create
+        - --params
+        - '{"box": {{preset.title_box}}, "text": {{inputs.title|json}}, "font": {{preset.font|json}}, "size": {{preset.font_size}}, "align": "center", "color": {{inputs.text_color|rgb01}}, "name": "Title"}'
+        - --cmd
+        - layer.layerStyle.stroke
+        - --params
+        - '{"size": {{preset.stroke_size}}, "position": "outside", "color": {{inputs.outline_color|json}}, "opacity": 100}'
+        - --cmd
+        - layer.layerStyle.dropShadow
+        - --params
+        - '{}'
+        - --out
+        - "{{job.out}}/thumbnail.psd"
+
+  - id: export
+    note: flatten to the upload JPEG
+    cli:
+      app: photocraft
+      args:
+        - convert
+        - "{{job.out}}/thumbnail.psd"
+        - "{{job.out}}/thumbnail.jpg"
+        - --quality
+        - "{{preset.jpeg_quality}}"
+
+  - id: previews
+    note: how the thumbnail reads in search results and the mobile feed
+    builtin:
+      use: previews
+      image: "{{job.out}}/thumbnail.jpg"
+      sizes: [[168, 94], [320, 180]]
+      out: "{{job.out}}/previews"
+
+verify:
+  - file: "{{job.out}}/thumbnail.jpg"
+    format: jpeg
+    width: 1280
+    height: 720
+    max_bytes: 2000000
+  - file: "{{job.out}}/thumbnail.psd"
+    format: psd
+    min_bytes: 1000
+  - file: "{{job.out}}/previews/preview-168x94.png"
+    format: png
+    width: 168
+    height: 94
