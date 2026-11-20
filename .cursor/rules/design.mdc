@@ -1,0 +1,34 @@
+---
+description: UI standards for STORYCRAFT's optional Mac front-ends (Quick Action, desktop app). Apply only when creating or editing those UIs.
+globs: mac/**
+alwaysApply: false
+---
+
+<!-- Only relevant once decision D7 is made. Toolkit lines are placeholders until then. -->
+
+# Design Rules
+
+## Toolkit
+
+- [egui (matches the Craft suite, cross-platform) or SwiftUI (Mac-native)] — decision D7. Until decided, prefer a Finder Quick Action / Shortcuts action that calls `sc`.
+- The UI holds no workflow logic: it shells out to `sc` and renders `job.json`. Anything the UI can do, `sc` can do.
+
+## States
+
+- **Idle:** drop zone ("Drop an image for a thumbnail") + "App name" field for icons + preset picker.
+- **Running:** per-step progress from `job.json`; Cancel kills the job's process group.
+- **Done:** thumbnail/contact-sheet preview, output paths, Reveal in Finder.
+- **Error:** the failing step in plain words, the app and version, "Report a problem" (runs `sc bug draft`, opens the draft for review — never files directly).
+- Buttons disable while a job runs; no double-submit.
+
+## Look
+
+- System fonts and native controls (SwiftUI) or the Craft theme tokens (egui). Respect light/dark mode.
+- 8 px spacing grid; previews shown at true pixel size where size matters (icons).
+
+## Accessibility
+
+- Full keyboard operation, logical focus order, no focus traps.
+- Every control exposes role, a name starting with its visible label, and state (VoiceOver).
+- 4.5:1 text contrast, 3:1 for controls; colour is never the only signal.
+- Respect Reduce Motion.

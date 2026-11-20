@@ -1,0 +1,107 @@
+# App name (or your own SVG) -> every icon size for macOS, iOS, Windows, Android, web and Linux.
+# VectorCraft draws the master; STORYCRAFT's packer rasterizes and packs it.
+# Docs: docs/recipes/icon-set.md (VectorCraft parameters there are marked "verify on Mac").
+id: icon-set
+version: 1
+summary: App name or master SVG -> full icon set (.icns, .ico, iOS/Android/web PNGs, favicon SVG, contact sheet).
+
+requires:
+  vectorcraft:
+    min_version: "0.24.0"
+    commands:
+      - file.new
+      - shape.rectangle
+      - text.create
+      - document.export
+
+inputs:
+  name:
+    type: text
+    required: true
+    help: the app name; its initials become the monogram (PhotoCraft -> PC)
+  letters:
+    type: text
+    help: override the monogram letters
+  master:
+    type: file
+    extensions: [svg]
+    help: your own square SVG master (text outlined); skips the VectorCraft drawing step
+  background:
+    type: color
+    default: "#2F5BFF"
+  foreground:
+    type: color
+    default: "#FFFFFF"
+
+preset: presets/icon-set.yaml
+
+steps:
+  - id: mono
+    builtin:
+      use: monogram
+      text: "{{inputs.name}}"
+      prefer: "{{inputs.letters}}"
+      max: 2
+
+  - id: draw
+    when: "!inputs.master"
+    note: full-bleed square tile with the monogram, text outlined so the packer needs no fonts
+    cli:
+      app: vectorcraft
+      args:
+        - run
+        - --cmd
+        - file.new
+        - --params
+        - '{"width": 1024, "height": 1024}'
+        - --cmd
+        - shape.rectangle
+        - --params
+        - '{"x": 0, "y": 0, "width": 1024, "height": 1024, "fill": {{inputs.background|json}}, "stroke": "none"}'
+        - --cmd
+        - text.create
+        - --params
+        - '{"x": 512, "y": {{preset.baseline}}, "text": {{steps.mono.letters|json}}, "size": {{preset.font_size}}, "font": {{preset.font|json}}, "color": {{inputs.foreground|json}}, "justify": "center"}'
+        - --cmd
+        - document.export
+        - --params
+        - '{"path": "{{job.out}}/master.svg", "format": "svg", "outlineText": true}'
+        - --export
+        - "{{job.out}}/master-preview.png"
+
+  - id: pack-drawn
+    when: "!inputs.master"
+    builtin:
+      use: pack-icons
+      master: "{{job.out}}/master.svg"
+      targets: presets/icon-targets.yaml
+      out: "{{job.out}}/icons"
+
+  - id: pack-given
+    when: inputs.master
+    builtin:
+      use: pack-icons
+      master: "{{inputs.master}}"
+      targets: presets/icon-targets.yaml
+      out: "{{job.out}}/icons"
+
+verify:
+  - file: "{{job.out}}/icons/macos/AppIcon.icns"
+    format: icns
+    min_images: 10
+  - file: "{{job.out}}/icons/windows/app.ico"
+    format: ico
+    min_images: 9
+  - file: "{{job.out}}/icons/ios/AppIcon-1024.png"
+    format: png
+    width: 1024
+    height: 1024
+    alpha: false
+  - file: "{{job.out}}/icons/web/favicon-32.png"
+    format: png
+    width: 32
+    height: 32
+  - file: "{{job.out}}/icons/android/play-store-512.png"
+    format: png
+    width: 512
+    height: 512

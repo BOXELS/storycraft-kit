@@ -1,0 +1,79 @@
+---
+description: Tech stack, coding conventions, and engineering standards for STORYCRAFT. Applies to all code files.
+globs:
+alwaysApply: true
+---
+
+# Tech Rules
+
+<!-- Assumes decision D2 = Rust. If TypeScript is chosen instead, replace the language/tooling lines; the rest holds. -->
+
+## Language and framework
+
+- Rust stable, edition 2024, Cargo workspace. `MIT OR Apache-2.0`, matching the Craft suite.
+- No `unsafe`. Non-test code does not panic: deny `unwrap`, `expect`, `panic` in shipped crates; errors are values (`thiserror` in libraries, `anyhow` only in binaries).
+- Binaries: `sc` (CLI, `clap`), `storycraft-mcp` (stdio MCP server). Both are thin over `storycraft-core`.
+- Talking to apps: spawn `<app>-cli` processes (one-shot or `mcp --headless` over stdio JSON-RPC). Never link app crates; never depend on app internals.
+- Discovery/consent: use the `craft-ai-agents` crate (storytold, pinned `rev`) to read `ArtCraft/mcp/apps.json`. Do not hand-parse that file.
+- Images: `image` + `resvg`/`usvg` for verifiers and packers; `iconutil` (macOS) for `.icns`; our own `.ico` writer (or a licence-checked crate).
+- Don't introduce other runtimes (Node, Python) into the shipped tools without asking.
+
+## Code organization
+
+- Files `snake_case.rs`; types `PascalCase`; one responsibility per module.
+- Group by domain: `apps/` (discovery, CLI runner, MCP client), `recipes/` (schema, engine), `verify/`, `pack/`, `bug/`.
+- Imports: std → external crates → workspace crates → `crate::`. Blank line between groups.
+- Functions over ~50 lines get split by responsibility.
+
+## Data and state
+
+- Recipes are YAML in `recipes/`, validated against a schema (`serde` + explicit checks) before any app starts. Unknown keys are errors.
+- Every run writes a job dir with `job.json` (inputs, app versions, steps, timings, outputs, verifier results) and, on failure, `failure.json`.
+- Command IDs and params come from the installed app (`<app>-cli commands --json`), cached per app version in `~/Library/Caches/storycraft/`. Recipes declare `requires:` (min versions + command IDs); preflight fails fast on mismatch.
+- No database. No global mutable state.
+
+## Process and app safety
+
+- Every app invocation gets per-job `--automation-read-root` (inputs) and `--automation-write-root` (job `out/`). Never the home folder, never the repo.
+- Timeouts on every spawn; kill the process group on timeout; record it as a failure, never retry silently more than once.
+- Unattended recipes use headless mode only. Live-app (`--connect`/`--bridge`) is for interactive sessions the user asked for.
+- Paths with spaces and non-ASCII names are normal on macOS — test them.
+
+## Config over hardcoded limits
+
+- Output specs (sizes, max bytes, quality floors) live in recipe/preset YAML, not in code.
+- Install paths, job root, cache dir come from `~/.config/storycraft/config.toml` with documented defaults (decision D3).
+
+### Secrets
+
+- No secrets in the repo, recipes, job dirs, or logs. `gh` uses its own auth. AI provider keys stay in the Craft apps' keychain store (`craft-ai`); STORYCRAFT never reads or copies them.
+
+## Error handling
+
+- CLI: one-line human message on stderr + JSON result on stdout with `--json`. Exit codes: 0 ok, 1 operation failed, 2 usage error, 3 verifier failed.
+- Always include app, version, step and command ID in errors.
+
+## Git
+
+- Descriptive present-tense commits; one logical change per commit. Never commit secrets, `.env`, job dirs, or generated outputs.
+- **Canonical branch:** `main`. Feature branches off `main`.
+
+### Scoped commits (parallel agent / multi-chat work)
+
+1. Check `git status` before committing.
+2. Stage only the files you changed — `git add path/to/file`, never `git add .` / `-A` unless asked.
+3. Leave unrelated changes alone.
+4. Never commit secrets or credentials.
+
+## Testing
+
+- `cargo test`; integration tests in one binary per crate (`tests/it/main.rs`).
+- Unit-test the engine and packers against fake app CLIs (scripted stdio servers), not the real apps.
+- `tests/live/` runs recipes against installed apps; opt-in (`SC_LIVE=1`), Mac only, never in CI.
+- Assert relations (exists, exact pixel size where the spec demands it, ≤ max bytes), not cosmetic values.
+- Never delete, weaken, or `#[ignore]` a test to make a check pass.
+- Checks before PR: `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test`.
+
+## Distribution
+
+- macOS first (universal binary). `cargo install --path` for development; signed release zips later (decision D3).
