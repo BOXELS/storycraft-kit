@@ -1,0 +1,42 @@
+---
+description: Authoring and changing STORYCRAFT recipes (declarative multi-app workflows) and output presets.
+globs: recipes/**, templates/**, apps/**
+alwaysApply: false
+---
+
+# Recipes
+
+## Shape
+
+```yaml
+id: youtube-thumbnail            # kebab-case, matches the file name
+version: 1                       # bump on any output-affecting change
+summary: Image in, 1280x720 YouTube thumbnail out.
+requires:
+  photocraft: { min: "0.23.0", commands: [ "<ids read from photocraft-cli commands>" ] }
+inputs:
+  image: { type: file, formats: [jpg, png, webp, psd, tif] }
+  title: { type: text, max_words: 5 }
+preset: presets/youtube.yaml     # sizes, max bytes, colour space — never inline magic numbers
+steps:
+  - id: compose
+    app: photocraft
+    mode: headless-mcp           # one-shot | headless-mcp  (live is never allowed in recipes)
+    commands: [ … ]              # ids + params exactly as the installed app documents them
+    outputs: { psd: out/thumbnail.psd }
+  - id: export
+    …
+verify:
+  - { file: out/thumbnail.jpg, width: 1280, height: 720, max_bytes: 2000000, colorspace: srgb }
+  - { preview: [ [168, 94], [320, 180] ], sheet: out/previews.png }
+```
+
+## Rules
+
+- Command IDs and params come from `apps/<app>/<version>.json` (generated). Never invent one; if a needed command doesn't exist, the recipe can't use it — open a feature request (see `upstream-contrib.mdc`) and design a fallback step.
+- Every recipe has at least one verifier per output file and produces a preview an agent can look at.
+- Recipes only write inside the job dir; inputs are read through read roots.
+- Warnings from apps (missing fonts, dropped content) fail the step unless the recipe explicitly allows that warning with a reason.
+- Templates in `templates/` are our own work; record provenance in `templates/README.md`.
+- A new or changed recipe ships with `docs/recipes/<id>.md` and a dry run (`sc run <id> --dry-run`) plus one live run on the Mac before it is called done.
+- Keep recipes small and composable; a recipe may call another recipe as a step.

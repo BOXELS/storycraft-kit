@@ -1,0 +1,36 @@
+[workspace]
+resolver = "3"
+members = ["crates/core", "crates/sc", "crates/mcp"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.90"
+repository = "https://github.com/BOXELS/storycraft-kit"
+
+[workspace.dependencies]
+storycraft-core = { path = "crates/core" }
+# The launcher's app list and agent consent (`ArtCraft/mcp/apps.json`), read the one way the suite reads it.
+craft-ai-agents = { git = "https://github.com/storytold/craft-ai-integrations", rev = "a822ad5b4db2c0dcd7a43bb62d6d75251fd3f8b5" }
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+dirs = "7"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+resvg = "0.45"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+tempfile = "3"
+thiserror = "2"
+toml_edit = "0.22"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+dbg_macro = "warn"
+todo = "warn"

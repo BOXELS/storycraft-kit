@@ -1,0 +1,56 @@
+# Every file the icon packer writes from one SVG master (paths relative to out/icons).
+# Shapes: full (as drawn), macos (Apple grid: rounded tile 824/1024, transparent margin),
+# opaque (flattened onto `background`, no alpha: App Store / iOS).
+
+background: "#FFFFFF"
+macos_tile: 0.8046875
+macos_radius: 0.2237
+contact_sheet: contact-sheet.png
+
+pngs:
+  # macOS .iconset (also packed into AppIcon.icns below; keep both for Xcode / iconutil users)
+  - { path: macos/AppIcon.iconset/icon_16x16.png, size: 16, shape: macos }
+  - { path: macos/AppIcon.iconset/icon_16x16@2x.png, size: 32, shape: macos }
+  - { path: macos/AppIcon.iconset/icon_32x32.png, size: 32, shape: macos }
+  - { path: macos/AppIcon.iconset/icon_32x32@2x.png, size: 64, shape: macos }
+  - { path: macos/AppIcon.iconset/icon_128x128.png, size: 128, shape: macos }
+  - { path: macos/AppIcon.iconset/icon_128x128@2x.png, size: 256, shape: macos }
+  - { path: macos/AppIcon.iconset/icon_256x256.png, size: 256, shape: macos }
+  - { path: macos/AppIcon.iconset/icon_256x256@2x.png, size: 512, shape: macos }
+  - { path: macos/AppIcon.iconset/icon_512x512.png, size: 512, shape: macos }
+  - { path: macos/AppIcon.iconset/icon_512x512@2x.png, size: 1024, shape: macos }
+
+  # iOS: one 1024 opaque master (Xcode 14+ single-size app icon)
+  - { path: ios/AppIcon-1024.png, size: 1024, shape: opaque }
+
+  # Android: Play Store listing + launcher fallbacks (adaptive foreground = full-bleed art)
+  - { path: android/play-store-512.png, size: 512, shape: full }
+  - { path: android/mipmap-mdpi/ic_launcher.png, size: 48, shape: full }
+  - { path: android/mipmap-hdpi/ic_launcher.png, size: 72, shape: full }
+  - { path: android/mipmap-xhdpi/ic_launcher.png, size: 96, shape: full }
+  - { path: android/mipmap-xxhdpi/ic_launcher.png, size: 144, shape: full }
+  - { path: android/mipmap-xxxhdpi/ic_launcher.png, size: 192, shape: full }
+
+  # Web
+  - { path: web/favicon-16.png, size: 16, shape: full }
+  - { path: web/favicon-32.png, size: 32, shape: full }
+  - { path: web/apple-touch-icon.png, size: 180, shape: opaque }
+  - { path: web/icon-192.png, size: 192, shape: full }
+  - { path: web/icon-512.png, size: 512, shape: full }
+
+  # Linux (hicolor)
+  - { path: linux/hicolor/48x48/apps/app.png, size: 48, shape: full }
+  - { path: linux/hicolor/128x128/apps/app.png, size: 128, shape: full }
+  - { path: linux/hicolor/256x256/apps/app.png, size: 256, shape: full }
+  - { path: linux/hicolor/512x512/apps/app.png, size: 512, shape: full }
+
+ico:
+  - { path: windows/app.ico, sizes: [16, 20, 24, 32, 40, 48, 64, 128, 256], shape: full }
+  - { path: web/favicon.ico, sizes: [16, 32, 48], shape: full }
+
+icns:
+  - { path: macos/AppIcon.icns, shape: macos }
+
+svg:
+  - web/icon.svg
+  - linux/hicolor/scalable/apps/app.svg

@@ -1,0 +1,38 @@
+---
+description: Rules for any interaction with the storytold (ArtCraft) GitHub repositories — filing bugs and feature requests, commenting, and opening fix PRs. Applies whenever an agent searches, drafts, files, comments on, or changes anything in storytold/* or tangency-labs/solidcraft.
+globs:
+alwaysApply: true
+---
+
+# Upstream contributions (storytold / ArtCraft)
+
+The authority for anything we send upstream is `storytold/craft-contrib/standards/app-agents.md` (copied into every app's `AGENTS.md`). Where it is stricter than our rules, it wins.
+
+## Bugs and feature requests
+
+- Use the `artcraft-bug-report` skill (`.cursor/skills/artcraft-bug-report/SKILL.md`): repo map, log collector, issue template, duplicate search, contributions log.
+- Start from `failure.json` when a recipe failed (`sc bug draft <job-dir>`).
+- Search open **and** closed issues for the error text and plain words; check `--author @me`. Duplicate → comment with version, OS and the new log line instead of opening another.
+- One issue per bug. A missing capability is a feature request: say what we were trying to make, not how to build it.
+- Draft first, show the user, file only after explicit approval, as the logged-in `gh` user.
+- Privacy scrub (see `security.mdc`): no home paths, usernames, document contents, full logs, or STORYCRAFT-internal names. Say "a release build" or "a source build" plus the version.
+- Vulnerabilities: private security advisory only.
+- Record every filed issue/comment in `notes/contributions.md` (newest first).
+- AutoCraft triages storytold issues automatically: a tight title, clean repro and exact version get acted on fastest.
+
+## Fix PRs (only when the user asks)
+
+- Work in a BOXELS fork (`BOXELS/<app>`), PR to `storytold/<app>`.
+- Before coding: search issues/PRs and recent `main` commits; claim the issue per `standards/claims.md`; don't take an issue someone else has a live claim on.
+- One issue per PR; no unrelated changes; moves separate from behaviour changes; CI/workflow changes in their own PR.
+- Follow the repo's `## This repository` section: run its listed checks (usually `cargo xtask ci`) and state in the PR what ran and what did not.
+- **Never commit `.cursor/`, `.claude/`, or scratch files** to storytold repos. STORYCRAFT rules stay in our repo.
+- Clean room: never read GPL/LGPL/AGPL source; never copy another product's code, assets or wording; an agent that writes code must not operate a proprietary app. Assets/fixtures need recorded provenance.
+- Apps are Rust only (no TypeScript/Tauri/webview); new dependencies need a licence on `standards/licences.md`; user-facing text goes through i18n with English keys.
+- Ask the user before anything a new commit can't undo: merging, closing, relabelling, force-pushing anything but our own PR branch.
+- If two different fixes for the same failing check haven't worked, leave the PR as draft, say what fails and what was tried, and stop.
+
+## Not ours
+
+- ArtCraft Launcher bugs: search `storytold/craft-launcher`; don't file on third-party launcher forks.
+- SolidCraft lives at `tangency-labs/solidcraft` (different maintainers and rules — read its `AGENTS.md` first).

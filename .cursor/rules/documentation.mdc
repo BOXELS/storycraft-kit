@@ -1,0 +1,35 @@
+---
+description: Documentation and cursor-rules maintenance for STORYCRAFT — where docs live, how they're named, and what must stay current. The step-by-step "update docs" workflow lives in the update-docs skill.
+globs:
+alwaysApply: true
+---
+
+# Documentation Rules
+
+## Always keep docs current
+
+- After any feature, architecture change, or removal: update relevant docs and `.cursor/rules` to match reality.
+- Prefer editing existing docs over creating duplicates. Search `docs/` first.
+- Document: architecture decisions, recipe contracts, app quirks we work around (with the upstream issue link), constraints agents must NOT break.
+
+## Doc location and naming
+
+- Agent-facing docs live in `docs/`, kebab-case names:
+  - `docs/architecture.md` — layers, control modes, data flow.
+  - `docs/mac-setup.md` — install paths, flags, MCP client entries, doctor checks.
+  - `docs/recipes/<recipe>.md` — purpose, inputs, outputs, steps (app + command IDs), verifiers, known app limits.
+  - `docs/apps/<app>.md` — what we use from that app, minimum version, known bugs (issue links).
+  - `docs/bug-loop.md` — capture → draft → approval → file.
+- A new recipe ships with its doc in the same change.
+- When an app update renames a command, update `apps/<app>/<version>.json`, the recipe, and its doc together.
+
+## Cursor rules maintenance
+
+- Convention changes other agents need → update `.cursor/rules/` too.
+- Cross-cutting → `global-rules.mdc`. App control → `craft-apps.mdc`. Upstream etiquette → `upstream-contrib.mdc`. Recipes → `recipes.mdc`. New rule files use `.mdc`.
+- Add a one-line "see `docs/FOO.md`" pointer from rules when a longer reference exists.
+- Refresh `models.mdc` against [cursor.com/docs/models](https://cursor.com/docs/models) when Cursor's lineup changes.
+
+## Trigger: "update docs"
+
+When the user says "update docs" or similar, run the `update-docs` skill (`.cursor/skills/update-docs/SKILL.md`). Don't ask which files — the skill finds them.

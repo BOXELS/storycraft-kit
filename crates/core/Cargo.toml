@@ -1,0 +1,26 @@
+[package]
+name = "storycraft-core"
+description = "Discovery, setup checks, recipe engine, verifiers and icon packers for driving the ArtCraft Crafting Apps."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+craft-ai-agents.workspace = true
+dirs.workspace = true
+image.workspace = true
+resvg.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+thiserror.workspace = true
+toml_edit.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

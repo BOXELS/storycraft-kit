@@ -1,0 +1,5 @@
+# Monogram look on the 1024x1024 master. Change these instead of the recipe.
+font: "Helvetica Neue"
+font_size: 440
+# Text baseline y; about centre + 0.35 x font_size centres capitals optically.
+baseline: 666

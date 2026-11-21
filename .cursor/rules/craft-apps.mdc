@@ -1,0 +1,49 @@
+---
+description: How agents drive the ArtCraft Crafting Apps (PhotoCraft, VectorCraft and FilmCraft first; others later) — control modes, discovery, file roots, verification. Applies whenever an agent uses an app, its CLI, or the ArtCraft/STORYCRAFT MCP servers.
+globs:
+alwaysApply: true
+---
+
+# Driving the Craft apps
+
+See `docs/architecture.md` and `docs/apps/<app>.md` for details.
+
+## Pick the mode
+
+| Need | Use |
+|---|---|
+| A named workflow (thumbnail, icon set, a recipe) | `STORYCRAFT` MCP tools or `sc run <recipe>` |
+| One-off, unattended edit/export | `<app>-cli run|export|convert … --out` (headless, job roots) |
+| Several commands with inspection between them | `<app>-cli mcp --headless` with roots, or `sc call` |
+| Ad-hoc exploration from chat | `ArtCraft` gateway: `craft_list_apps` → `craft_find_tools` → `craft_describe_tool` → `craft_call_tool` |
+| "Do it in my open window" / reproduce a UI bug | live app (`--connect`/`--bridge`, or gateway while the launcher switch is on) — only when the user asked |
+
+## Discover, don't guess
+
+- Read command IDs and params from the installed version: `<app>-cli commands` (`--json`, `--search`), `command_list`, or `craft_describe_tool`. Cache in `apps/<app>/<version>.json`.
+- Check `<app>-cli --version` before running a recipe; respect its `requires:` block.
+- `<subcommand> --help` is the executable source of truth for flags.
+
+## Files
+
+- Headless runs get job-scoped `--automation-read-root` (inputs) and `--automation-write-root` (job `out/`); repeat read roots if needed, one write root only.
+- Experiment on a copy (`image.duplicate`, `history.newDocument`), not the user's original.
+- Save an editable source (`.psd`, `.vectorcraft`) next to every flat export.
+
+## Verify
+
+- After each step: `doc_inspect` / `info` for structure, `render_preview` (≤ 2048 px) to look at it.
+- A step that exits 0 but prints warnings (missing fonts, dropped content, `--strict` notes) is a failure for recipes.
+- `command_batch` is not atomic: after an error, inspect state; undo with `edit.undo` per history entry if needed.
+- Report results with paths, sizes, and the preview you checked — never "looks good" without having seen it.
+
+## Timeouts and failures
+
+- Long commands run as jobs (progress/cancel); don't fire a second call to the same app while one runs.
+- On failure: capture app, version, command ID, params, stderr, exit code and the log lines (`~/Library/Application Support/<App>/logs/app.log`, `app.1.log`) into `failure.json`, then follow `upstream-contrib.mdc`. Retry at most once, and only for timeouts/infrastructure.
+
+## Don'ts
+
+- Don't edit `apps.json` / `flags.toml` without the user's yes.
+- Don't scrape the GUI or synthesize clicks when an engine command exists.
+- Don't treat ArtCraft IDE (AI generation app) as a local CLI — it has none; use the apps' own AI tools or ask.

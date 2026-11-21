@@ -1,0 +1,99 @@
+---
+description: Model selection guidance — which Cursor model fits the task at hand, and when to tell the user to switch. Applies to every interaction.
+globs:
+alwaysApply: true
+---
+
+# Model Rules
+
+These rules apply no matter which model is currently running. Your job is to notice when the task in front of you is a poor fit for the current model and say so — briefly, once — then get on with the work.
+
+## This project's setup
+
+- Cursor plan: [e.g. "Pro", "Pro+", "Ultra", "Teams", "Hobby"].
+- Default model for everyday work: [e.g. "Auto", "Composer 2.5", "Grok 4.7", "Claude Sonnet 5.5"].
+- Model for hard work: [e.g. "Claude Opus 5.5 (thinking)", "Claude Fable 5.1 (thinking)", "GPT-5.6 Sol"].
+- Worker model for delegated steps: [e.g. "Grok 4.7 (fast)", "Composer 2.5", "none — no cheap pool available, skip delegation"]. Set in `.cursor/agents/worker.md` (`model:` field). Remove this line if you don't want delegation.
+- Cost sensitivity: [e.g. "Keep costs low — only suggest a premium model for genuinely hard work", "Quality first — always recommend the best model for the job"].
+- Privacy constraints: [e.g. "Privacy Mode is on and we have NOT opted in to Anthropic data retention, so Claude Fable is unavailable", "No restrictions". Remove this line if not applicable.]
+
+## Two tiers
+
+Think of models in two tiers. Most work belongs in the first.
+
+### Everyday tier — fast, cheap, good enough for most tasks
+
+Use for: small bug fixes, copy and styling changes, adding a field or a form, writing tests for existing code, explaining code, renaming things, single-file work, anything with a clear spec and an obvious approach.
+
+| Model | Notes |
+|---|---|
+| **Auto** | Cursor picks for you. Fine default for beginners. (On Teams/Enterprise this is the smarter "Cursor Router"; on individual plans it's the older Auto logic.) |
+| **Composer 2.5** | Cursor's own model. Cheapest frontier-ish option, tuned for edits, tool use, and terminal work. Very fast. |
+| **Grok 4.7** | Strong instruction-following even with many rules loaded. Good long-horizon agent work at a low price. Draws from the bigger "Cursor Models" usage pool on Pro. |
+| **Claude Sonnet 5.5** | Near-Opus quality at half the price. Best "everyday" pick when you want Claude-style reasoning. |
+| **Claude Haiku 5.5** | The cheapest Claude model. Use it for searching code, summarizing logs and docs, and simple bulk edits. |
+| **Gemini 3.8 Flash** | Cheap, 1M context, strong when you need to read a lot of files at once. |
+| **GPT-5.6 Terra / Luna** | Mid and low tier of the GPT-5.6 family. Terra is fine for everyday agent work; Luna is for prototyping and bulk loops, not hard problems. |
+
+### Hard tier — reach for these deliberately
+
+Use for: a new feature that touches many files, architecture or data-model decisions, a bug that already survived two fix attempts, anything involving auth, payments, security, or database migrations, large refactors, and long autonomous sessions where you want the model to run without check-ins.
+
+| Model | Notes |
+|---|---|
+| **Claude Opus 5.5** | The workhorse hard-tier model. Big jump on agentic coding; use the *thinking* variant. Can over-explain in long sessions — tell it to be brief. |
+| **Claude Fable 5.1** | Top of the Claude line, 2.5x Opus 5.5's price. Use it for problems Opus 5.5 could not solve, not as a default. Built for autonomous multi-step work with fewer check-ins. Use the *high thinking* variant. Requires an Anthropic data-retention opt-in under Privacy Mode / Teams — if that's off, it won't be available. |
+| **GPT-5.6 Sol** | OpenAI's flagship. Concise, persistent through long sessions. Known quirk: it sometimes agrees with feedback and then waits for an explicit "do it" — the go-ahead rule in `global-rules.mdc` exists partly for this. |
+| **Kimi K3** | Best open-weight model in Cursor, 1M context at a flat rate, strong one-shot persistence. Hidden by default — enable it in model settings. |
+
+### Naming gotchas
+
+- **There is no "ChatGPT 6" or "GPT-6" in Cursor.** The newest OpenAI family is **GPT-5.6**, in three sizes: Sol (biggest) > Terra > Luna. If the user asks for "ChatGPT 6", they mean GPT-5.6 Sol.
+- **"Thinking" is not a separate model.** It's the same model with more reasoning time. Use it on the hard tier; skip it for everyday work where it just adds latency and cost.
+- **Model names churn every few months.** This list is current as of November 2026. Verify against the model picker and [cursor.com/docs/models](https://cursor.com/docs/models) before recommending something that may have been renamed.
+
+## How to apply this
+
+When the user describes what they want to build or fix:
+
+1. **Classify the task** as everyday or hard using the lists above. When it's genuinely unclear, ask one question — not five.
+2. **If the current model is a mismatch, say so in one line at the top of your response**, then proceed anyway. Example: *"This touches auth and six files — consider switching to Opus 5.5 (thinking) or Fable 5.1 before I start. Continuing on the current model unless you switch."* Do not repeat the suggestion in later turns of the same task.
+3. **Never block on model choice.** The user may have cost or plan reasons for staying put. Do the best work you can on whatever is running.
+4. **Never upsell.** Do not suggest a hard-tier model for an everyday-tier task. Most work should stay on the cheap tier.
+5. **Escalation rule.** If a fix has failed twice on an everyday-tier model, recommend escalating to the hard tier instead of trying a third time the same way. Say what you've already tried so the next model doesn't repeat it.
+6. **De-escalation rule.** When the hard part is done (architecture agreed, tricky bug found, migration written), tell the user they can switch back to the everyday tier for the remaining follow-through.
+
+## Route work to the right model
+
+| Work | In Cursor | In Claude Code |
+|---|---|---|
+| Searching code, summarizing logs and docs | Built-in Explore, set to Claude Haiku 5.5 in Cursor Settings | `Explore` on Haiku 5.5 (`.claude/agents/Explore.md`) |
+| Mechanical steps, building from a clear plan, tests, routine fixes | `worker` on Grok 4.7 (`.cursor/agents/worker.md`) | `worker` on Sonnet 5.5 (`.claude/agents/worker.md`) |
+| Planning, architecture, tricky bugs, combining results | Claude Opus 5.5, in the main chat | Claude Opus 5.5, in the main chat |
+| Problems Opus 5.5 could not solve | Claude Fable 5.1 | Claude Fable 5.1, as a one-off subagent model |
+
+- Cursor bills Claude models at API rates and Grok from its included pool, so Cursor's `worker` stays on Grok.
+- Cursor also reads `.claude/agents/`. Both tools have a `worker` file on purpose: when names match, Cursor uses the `.cursor/agents/` version.
+- Quick edits and back-and-forth stay in the main chat. A subagent starts with no chat history, so handing off small jobs can cost more than it saves.
+
+## Plan on the hard tier, execute on the cheap tier
+
+Hard-tier usage is the scarce resource. Planning and judgment are where it pays off; typing out well-specified edits is not. When you are running on a hard-tier model and the work breaks into steps, spend the hard model on the plan and the review, and hand the typing to the `worker` subagent (`.cursor/agents/worker.md`, pinned to the cheap worker model above).
+
+1. **Plan first.** Write a numbered plan. Mark each step **delegate** or **keep**. Do this before touching any file.
+2. **Delegate** steps that are mechanical and fully specified: apply a described edit across files, add a field/route/component to a spec, write tests for described behavior, rename or move things, wire something up, run a command and report.
+3. **Keep** (do yourself) architecture and data-model decisions; anything touching auth, payments, security, secrets, or migrations; debugging where the cause is unknown; reviewing worker output; and any step a worker has already failed twice.
+4. **Write a self-contained handoff.** The worker starts with a clean context and has not seen this chat. Give it: **Goal** (one line), **Files** (exact paths), **Change** (precise — paste the snippet, signature, or pattern to follow), **Don't touch** (what to leave alone), **Done when** (the check to run). Never write "as discussed."
+5. **Parallelize carefully.** Steps that touch different files and don't depend on each other can go to several workers at once (multiple subagent calls in one message, or `/multitask` in the Agents Window). Steps that share a file, or where one needs the other's output, run one after another.
+6. **Review before you report.** Read each worker's report and diff. Fix small problems yourself; for larger ones, re-delegate with a sharper handoff. Run the project's checks. Don't tell the user it's done on the worker's word alone.
+7. **Don't over-delegate.** If the plan is one or two small edits, just make them — the handoff costs more than the work. If you are already on an everyday-tier model, do the work yourself; there is nothing to save.
+8. **If the worker isn't actually on the cheap model** (it reports a different model, or you can tell it inherited yours), say so to the user in one line, once, and carry on. Delegation still helps by keeping this chat's context small.
+
+### Project-specific "hard" signals
+
+- The recipe engine's step runner, MCP session client and failure capture (`crates/core/src/{engine,mcp_client,failure}*`).
+- Anything that sets or changes automation read/write roots, or launches an app CLI with file access.
+- `storycraft-mcp` tool schemas and annotations (agents depend on them).
+- Filing issues or opening PRs on `storytold/*` (public, other people's time; see `upstream-contrib.mdc`).
+- Mac setup that writes outside the repo: `flags.toml`, `apps.json`, MCP client configs, Gatekeeper.
+- Everyday tier: new recipe YAML that follows an existing one, verifier thresholds, docs, packer size tables.
